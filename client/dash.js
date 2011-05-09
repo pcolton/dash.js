@@ -27,61 +27,61 @@
 	}
 	
 	// Init main object and inherit from Backbone
-	var Dashnode = root.Dashnode = subclass(Backbone);
+	var Dash = root.Dash = subclass(Backbone);
 
 	// Current version of the library. Keep in sync with `package.json`.
-	Dashnode.VERSION = '0.2.0';
+	Dash.VERSION = '0.2.0';
 
 	// Attached the subclas function to the root object for future use
-	Dashnode.subclass = subclass;
+	Dash.subclass = subclass;
 	
 	// Create the 'template' property to hold the ICANHAZ.JS object entry-point object.
 	if(root.ich) 
 	{
-		Dashnode.template = subclass(root.ich);
+		Dash.template = subclass(root.ich);
 	}
 
 	// TODO: support multiple callbacks :-)
-	Dashnode.ready = function(callback)
+	Dash.ready = function(callback)
 	{
-		Dashnode.ready.callback = callback;
+		Dash.ready.callback = callback;
 	}
 
 	// Because NowJS essentially deletes and recreates the now object,
 	// we need to re-subclass it and move over any properties and functions
 	// whenever this happens. Hopefully this will change in the future in NowJS.
-	var createDashnodeIO = function()
+	var createDashIO = function()
 	{
-		if(console) console.log("Dashnode.io created.");
+		if(console) console.log("Dash.io created.");
 
-		// Assign the nowjs object to the Dashnode.io property.
-		Dashnode.io = root.now;
+		// Assign the nowjs object to the Dash.io property.
+		Dash.io = root.now;
 	
 		// If templating is loaded, then load remote templates.
-		if(Dashnode.template && !Dashnode.template.loaded)
+		if(Dash.template && !Dash.template.loaded)
 		{
 			// Get the remote templates, if any.
-			Dashnode.io._getTemplates(function(data)
+			Dash.io._getTemplates(function(data)
 			{
 				// Map each remote template
 				_.each(data, function(template, name)
 				{
-					Dashnode.template.addTemplate(name, template);
+					Dash.template.addTemplate(name, template);
 				});
 	
-				Dashnode.template.loaded = true;
+				Dash.template.loaded = true;
 				
 				// Fire callback that we're ready (all remote templates loaded).
-				if(Dashnode.ready.callback) Dashnode.ready.callback();
+				if(Dash.ready.callback) Dash.ready.callback();
 			});
 		}
 		else
 		{
-			if(Dashnode.ready.callback) Dashnode.ready.callback();
+			if(Dash.ready.callback) Dash.ready.callback();
 		}
 	}
 
-	var configureDashnodeIO = function()
+	var configureDashIO = function()
 	{
 		// Make sure NowJS is loaded.
 		if(root.now && root.nowLib)
@@ -90,18 +90,18 @@
 			var oldNowJSReady = root.nowLib.nowJSReady;
 	
 			// Create a new version of oldNowJSReady that calls the old and then recreates
-			// and relinks the Dashnode.io property.
+			// and relinks the Dash.io property.
 			root.nowLib.nowJSReady = function()
 			{
 				// Call the current nowJSReady function in NowJS
 				oldNowJSReady();
 				
-				// Create a new Dashnode.io property (bound to the new NowJS).
-				createDashnodeIO();
+				// Create a new Dash.io property (bound to the new NowJS).
+				createDashIO();
 			}
 
-			// The first time this function is called, go ahead and create Dashnode.io
-			createDashnodeIO();
+			// The first time this function is called, go ahead and create Dash.io
+			createDashIO();
 		}
 	}
 	
@@ -112,9 +112,9 @@
 
 		now.ready(function()
 		{
-			if(!Dashnode.io) 
+			if(!Dash.io) 
 			{
-				configureDashnodeIO();
+				configureDashIO();
 			}
 		});
 	});

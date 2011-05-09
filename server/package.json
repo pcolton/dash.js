@@ -6,7 +6,7 @@
   "author"        : "Paul Colton <dashjs@colton.net>",
   "contributors"  : [],
   "dependencies"  : {
-    	"connect" : ">=1.4.0",
+   	"connect" : ">=1.4.0",
 	"now"     : ">=0.5.3"
   },
   "lib"           : ".",

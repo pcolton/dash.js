@@ -21,6 +21,8 @@ module.exports = new function()
 	// Create a reference to the connect module.
 	this.connect = connect;
 
+	var root = this;
+
 	this.initialize = function(options)
 	{
 		if(options && options.templatesPath)
@@ -31,12 +33,10 @@ module.exports = new function()
 		_httpServer = connect.createServer();
 		_templates = _loadTemplates(_templatesPath);
 
-		var njs = nowjs.initialize(_httpServer);
-		njs.connected(_onUserConnected);
-		njs.disconnected(_onUserDisconnected);
-
-		this.io = njs.now;
-		this.io._getTemplates = _getTemplates;
+		root.io = nowjs.initialize(_httpServer);
+		root.io.connected(_onUserConnected);
+		root.io.disconnected(_onUserDisconnected);
+		root.io.now._getTemplates = _getTemplates;
 	}
 
 	this.listen = function(port)
