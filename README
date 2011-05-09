@@ -1,6 +1,8 @@
 
 DashJS is a RESTless Evented JavaScript library and set of tools which leverages some of the best JavaScript "micro-frameworks" out there to provide a single-namespace set of APIs for easy creation of multi-user capable, real-time web applications.
 
+Getting started videos can be found here: http://dashjs.com
+
 The micro-frameworks utilized for DashJS are:
 
 	json2.js
