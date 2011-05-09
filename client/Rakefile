@@ -1,0 +1,39 @@
+# Derived from backbone's Rakefile
+
+require 'rubygems'
+
+HEADER = /((^\s*\/\/.*\n)+)/
+
+desc "rebuild the dash-min.js files for distribution"
+task :build do
+  begin
+    require 'closure-compiler'
+  rescue LoadError
+    puts "closure-compiler not found.\nInstall it by running 'gem install closure-compiler"
+    exit
+  end
+
+  source = File.read 'dash.js'
+  header = source.match(HEADER)
+  File.open('dash-min-standalone.js', 'w+') do |file|
+    file.write header[1].squeeze(' ') + Closure::Compiler.new.compress(source)
+  end
+
+  #concatenate all of the dependencies together
+  icanhaz = File.read 'dependencies/ICanHaz.min.js'
+  backbone = File.read 'dependencies/backbone-0.3.3.min.js'
+  json2 = File.read 'dependencies/json2-min.js'
+  underscore = File.read 'dependencies/underscore-1.1.6.min.js'
+  dash = File.read 'dash-min-standalone.js'
+
+  File.open('dash-min.js', 'w+') do |file|
+	  file.write json2 
+	  file.write underscore 
+	  file.write backbone 
+	  file.write icanhaz
+	  file.write dash 
+  end
+
+end
+
+

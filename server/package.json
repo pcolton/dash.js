@@ -1,0 +1,16 @@
+{
+  "name"          : "dash",
+  "description"   : "RESTless Evented JavaScript",
+  "url"           : "http://dashjs.com/",
+  "keywords"      : ["util", "functional", "server", "client", "browser", "backbone", "nowjs", "mobile"],
+  "author"        : "Paul Colton <dashjs@colton.net>",
+  "contributors"  : [],
+  "dependencies"  : {
+    	"connect" : ">=1.4.0",
+	"now"     : ">=0.5.3"
+  },
+  "lib"           : ".",
+  "main"          : "dash.js",
+  "version"       : "0.2.0"
+}
+
