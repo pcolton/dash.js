@@ -3,27 +3,26 @@
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
 
-var	fs		= require("fs"),
+var	fs	= require("fs"),
 	connect	= require("connect"),
 	nowjs	= require("now");
 
 module.exports = new function()
 {
+	var root = this;
+
 	var _templatesPath = "templates";
 	var _httpServer;
 	var _templates;
 	var _templatesExtension = {};
-	var _onUserConnectedCallback = undefined;
-	var _onUserDisconnectedCallback = undefined;
-	var _onDashlinkLoadCallback = undefined;
-	var _onDashlinkSaveCallback = undefined;
+	var _onDashlinkLoadCallback = [];
+	var _onDashlinkSaveCallback = [];
 
+	// Version number.
 	this.version = "0.3.0";
 
 	// Create a reference to the connect module.
 	this.connect = connect;
-
-	var root = this;
 
 	this.initialize = function(options)
 	{
@@ -36,8 +35,9 @@ module.exports = new function()
 		_templates = _loadTemplates(_templatesPath);
 
 		root.io = nowjs.initialize(_httpServer);
-		root.io.connected(_onUserConnected);
-		root.io.disconnected(_onUserDisconnected);
+
+		root.io.dashlinkLoad = _onDashlinkLoad;
+		root.io.dashlinkSave = _onDashlinkSave;
 
 		root.io.now._getTemplates = _getTemplates;
 		root.io.now._dashlinkLoad = _dashlinkLoad;
@@ -51,7 +51,7 @@ module.exports = new function()
 		if(_httpServer) 
 		{
 			_httpServer.listen(_port);
-			console.log("Dash v" + this.version + " listening on port " + _port);
+			console.log("Dash.js v" + this.version + " listening on port " + _port);
 		}
 	}
 
@@ -60,48 +60,52 @@ module.exports = new function()
 		return _httpServer;
 	}
 
-	this.onUserConnected = function(callback)
-	{
-		_onUserConnectedCallback = callback;
-	}
-
-	this.onUserDisconnected = function(callback)
-	{
-		_onUserDisconnectedCallback = callback;
-	}
-
-	this.onDashlinkLoad = function(callback)
-	{
-		_onDashlinkLoadCallback = callback;	
-	}
-
-	this.onDashlinkSave = function(callback)
-	{
-		_onDashlinkSaveCallback = callback;	
-	}
-
 	// Private functions.
+
+	var _onDashlinkLoad = function(callback)
+	{
+		_onDashlinkLoadCallback.push(callback);	
+	}
+
+	var _onDashlinkSave = function(callback)
+	{
+		_onDashlinkSaveCallback.push(callback);	
+	}
 
 	var _dashlinkLoad = function(name, data)
 	{
-		if(_onDashlinkLoadCallback) _onDashlinkLoadCallback(name, data);
+		for(var i=0; i<_onDashlinkLoadCallback.length; i++)
+		{
+			var callback = _onDashlinkLoadCallback[i];
+			callback(name, data);
+		}
 	}
 
 	var _dashlinkSave = function(name, data)
 	{
-		if(_onDashlinkSaveCallback) _onDashlinkSaveCallback(name, data);
+		for(var i=0; i<_onDashlinkSaveCallback.length; i++)
+		{
+			var callback = _onDashlinkSaveCallback[i];
+			callback(name, data);
+		}
 	}
 
 	var _onUserConnected = function()
 	{
-		// TODO: allow multiple callbacks
-		if(_onUserConnectedCallback) _onUserConnectedCallback(this.now);
+		for(var i=0; i<_onUserConnectedCallback.length; i++)
+		{
+			var callback = _onUserConnectedCallback[i];
+			callback(this.now);
+		}
 	}
 
 	var _onUserDisconnected = function()
 	{
-		// TODO: allow multiple callbacks
-		if(_onUserDisconnectedCallback) _onUserDisconnectedCallback(this.now);
+		for(var i=0; i<_onUserDisconnectedCallback.length; i++)
+		{
+			var callback = _onUserDisconnectedCallback[i];
+			callback(this.now);
+		}
 	}
 
 	var _getTemplates = function(callback)

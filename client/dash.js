@@ -44,25 +44,37 @@
 	// TODO: support multiple callbacks :-)
 	Dash.ready = function(callback)
 	{
-		Dash.ready.callback = callback;
+		// If Dash is already ready, no need to save the callback, just fire it now
+		if(Dash.ready.fired) 
+		{
+			callback();
+		}
+		else
+		{
+			if(!Dash.ready.callbacks) Dash.ready.callbacks = [];
+			Dash.ready.callbacks.push(callback);
+		}
 	}
 
-	// Dashlink ties the client models to server calls
+	// Adapted from backbone-localstorage.js.
+	// The data link is represented by a single JS object.
+	// Create it with a meaningful name, like the name you'd give a table.
 	Dash.dashlink = function(name)
 	{
+		var _this = this;
 		this.name = name;
-		this.ready = false;
+
+		// Delayed init 
+		Dash.ready(function() 
+		{
+			var store = Dash.io._dashlinkLoad(_this.name);
+			_this.data = (store && JSON.parse(store)) || {};
+		});
 	}
 
+	// Adapted from backbone-localstorage.js.
 	_.extend(Dash.dashlink.prototype,
 	{
-		init: function()
-		{
-			var store = Dash.io._dashlinkLoad(this.name);
-			this.data = (store && JSON.parse(store)) || {};
-			this.ready = true;
-		},
-
 		save: function()
 		{
 			//console.log("DASHLINK/SAVE: " + this.name + " = " + JSON.stringify(this.data));
@@ -111,14 +123,13 @@
 		}
 	});
 
-	// Bind our sync to the Backboke.sync function.
+	// Adapted from backbone-localstorage.js.
+	// Override Backbone.sync to use delegate to the model or collection's 
+	// dashlink property, which should be an instance of Dash.dashlink.
 	Dash.__super__.sync = function(method, model, success, error)
 	{
 		var resp;
 		var link = model.dashlink || model.collection.dashlink;
-
-		// Support delayed initing
-		if(link && !link.ready) link.init();
 
 		switch (method)
 		{
@@ -138,15 +149,13 @@
 		}
 	}
 
-	// Because NowJS essentially deletes and recreates the now object,
-	// we need to re-subclass it and move over any properties and functions
-	// whenever this happens. Hopefully this will change in the future in NowJS.
+	// Setup the Dash.io object and load remote templates
 	var createDashIO = function()
 	{
-		if(console) console.log("Dash.io created.");
-
 		// Assign the nowjs object to the Dash.io property.
 		Dash.io = root.now;
+
+		if(console) console.log("Dash.js: Dash.io created.");
 	
 		// If templating is loaded, then load remote templates.
 		if(Dash.template && !Dash.template.loaded)
@@ -163,15 +172,31 @@
 				Dash.template.loaded = true;
 				
 				// Fire callback that we're ready (all remote templates loaded).
-				if(Dash.ready.callback) Dash.ready.callback();
+				fireReadyCallbacks();
 			});
 		}
 		else
 		{
-			if(Dash.ready.callback) Dash.ready.callback();
+			fireReadyCallbacks();
 		}
 	}
 
+	var fireReadyCallbacks = function()
+	{
+		if(Dash.ready.callbacks)
+		{
+			for(var i=0; i<Dash.ready.callbacks.length; i++)
+			{
+				var callback = Dash.ready.callbacks[i];
+				callback();
+			}
+		}
+
+		Dash.ready.fired = true;
+	}
+
+	// There are situations where the nowjs 'now' object may get
+	// recreated, this function intercepts that call and rebinds Dash.io.
 	var configureDashIO = function()
 	{
 		// Make sure NowJS is loaded.
@@ -196,20 +221,24 @@
 		}
 	}
 
+	// From backbone-localstorage.js.
+	// Generate four random hex digits.
 	function S4()
 	{
 	   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 	};
 
+	// From backbone-localstorage.js.
+	// Generate a pseudo-GUID by concatenating random hexadecimal.
 	function guid()
 	{
 	   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 	};
 
-	// Dynamically load the NowjS script if available
+	// Dynamically load the NowjS script.
 	$.getScript("/nowjs/now.js", function() 
 	{ 	
-		if(console) { console.log("loaded nowjs"); }
+		if(console) { console.log("Dash.js: nowjs loaded"); }
 
 		now.ready(function()
 		{
