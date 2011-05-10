@@ -1,4 +1,4 @@
-// Dash.js v0.2.0
+// Dash.js v0.3.0
 // (c) 2011 Paul Colton
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
@@ -15,8 +15,10 @@ module.exports = new function()
 	var _templatesExtension = {};
 	var _onUserConnectedCallback = undefined;
 	var _onUserDisconnectedCallback = undefined;
+	var _onDashlinkLoadCallback = undefined;
+	var _onDashlinkSaveCallback = undefined;
 
-	this.version = "0.2.0";
+	this.version = "0.3.0";
 
 	// Create a reference to the connect module.
 	this.connect = connect;
@@ -36,7 +38,10 @@ module.exports = new function()
 		root.io = nowjs.initialize(_httpServer);
 		root.io.connected(_onUserConnected);
 		root.io.disconnected(_onUserDisconnected);
+
 		root.io.now._getTemplates = _getTemplates;
+		root.io.now._dashlinkLoad = _dashlinkLoad;
+		root.io.now._dashlinkSave = _dashlinkSave;
 	}
 
 	this.listen = function(port)
@@ -46,7 +51,7 @@ module.exports = new function()
 		if(_httpServer) 
 		{
 			_httpServer.listen(_port);
-			console.log("Dash listening on port " + _port);
+			console.log("Dash v" + this.version + " listening on port " + _port);
 		}
 	}
 
@@ -65,7 +70,27 @@ module.exports = new function()
 		_onUserDisconnectedCallback = callback;
 	}
 
+	this.onDashlinkLoad = function(callback)
+	{
+		_onDashlinkLoadCallback = callback;	
+	}
+
+	this.onDashlinkSave = function(callback)
+	{
+		_onDashlinkSaveCallback = callback;	
+	}
+
 	// Private functions.
+
+	var _dashlinkLoad = function(name, data)
+	{
+		if(_onDashlinkLoadCallback) _onDashlinkLoadCallback(name, data);
+	}
+
+	var _dashlinkSave = function(name, data)
+	{
+		if(_onDashlinkSaveCallback) _onDashlinkSaveCallback(name, data);
+	}
 
 	var _onUserConnected = function()
 	{

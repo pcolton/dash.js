@@ -1,4 +1,4 @@
-// Dash.js v0.2.0
+// Dash.js v0.3.0
 // (c) 2011 Paul Colton
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
@@ -30,7 +30,7 @@
 	var Dash = root.Dash = subclass(Backbone);
 
 	// Current version of the library. Keep in sync with `package.json`.
-	Dash.VERSION = '0.2.0';
+	Dash.VERSION = '0.3.0';
 
 	// Attached the subclas function to the root object for future use
 	Dash.subclass = subclass;
@@ -45,6 +45,97 @@
 	Dash.ready = function(callback)
 	{
 		Dash.ready.callback = callback;
+	}
+
+	// Dashlink ties the client models to server calls
+	Dash.dashlink = function(name)
+	{
+		this.name = name;
+		this.ready = false;
+	}
+
+	_.extend(Dash.dashlink.prototype,
+	{
+		init: function()
+		{
+			var store = Dash.io._dashlinkLoad(this.name);
+			this.data = (store && JSON.parse(store)) || {};
+			this.ready = true;
+		},
+
+		save: function()
+		{
+			//console.log("DASHLINK/SAVE: " + this.name + " = " + JSON.stringify(this.data));
+			Dash.io._dashlinkSave(this.name, JSON.stringify(this.data));
+		},
+
+		create: function(model)
+		{
+			if(!model.id) model.id = model.attributes.id = guid();
+			this.data[model.id] = model;
+			this.save();
+
+			//console.log("DASHLINK/CREATE: " + this.name + " , model: " + model.id);
+
+			return model;
+		},
+	
+		update: function(model)
+		{
+			this.data[model.id] = model;
+			this.save();
+
+			// console.log("DASHLINK/UPDATE: " + this.name + " , model: " + model.id);
+
+			return model;
+		},
+
+		find: function(model)
+		{
+			// console.log("DASHLINK/FIND: " + this.name + " , model: " + model.id);
+			return this.data[model.id];
+		},
+
+		findAll: function()
+		{
+			// console.log("DASHLINK/FINDALL: " + this.name);
+			return _.values(this.data);
+		},
+
+		destroy: function(model)
+		{
+			// console.log("DASHLINK/DELETE: " + this.name + " , model: " + model.id);
+			delete this.data[model.id];
+			this.save();
+			return model;
+		}
+	});
+
+	// Bind our sync to the Backboke.sync function.
+	Dash.__super__.sync = function(method, model, success, error)
+	{
+		var resp;
+		var link = model.dashlink || model.collection.dashlink;
+
+		// Support delayed initing
+		if(link && !link.ready) link.init();
+
+		switch (method)
+		{
+			case "read":    resp = model.id ? link.find(model) : link.findAll(); break;
+			case "create":  resp = link.create(model);                            break;
+			case "update":  resp = link.update(model);                            break;
+			case "delete":  resp = link.destroy(model);                           break;
+		}
+
+		if (resp)
+		{
+			success(resp);
+		}
+		else
+		{
+			error("Record not found");
+		}
 	}
 
 	// Because NowJS essentially deletes and recreates the now object,
@@ -104,7 +195,17 @@
 			createDashIO();
 		}
 	}
-	
+
+	function S4()
+	{
+	   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+	};
+
+	function guid()
+	{
+	   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+	};
+
 	// Dynamically load the NowjS script if available
 	$.getScript("/nowjs/now.js", function() 
 	{ 	
