@@ -1,4 +1,4 @@
-// Dash.js v0.3.0
+// Dash.js v0.3.1
 // (c) 2011 Paul Colton
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
@@ -15,11 +15,10 @@ module.exports = new function()
 	var _httpServer;
 	var _templates;
 	var _templatesExtension = {};
-	var _onDashlinkLoadCallback = [];
-	var _onDashlinkSaveCallback = [];
+	var _onDashlinkCallback = [];
 
 	// Version number.
-	this.version = "0.3.0";
+	this.version = "0.3.1";
 
 	// Create a reference to the connect module.
 	this.connect = connect;
@@ -36,12 +35,10 @@ module.exports = new function()
 
 		root.io = nowjs.initialize(_httpServer);
 
-		root.io.dashlinkLoad = _onDashlinkLoad;
-		root.io.dashlinkSave = _onDashlinkSave;
+		root.io.dashlink = _onDashlink;
 
 		root.io.now._getTemplates = _getTemplates;
-		root.io.now._dashlinkLoad = _dashlinkLoad;
-		root.io.now._dashlinkSave = _dashlinkSave;
+		root.io.now._dashlink = _dashlink;
 	}
 
 	this.listen = function(port)
@@ -62,31 +59,17 @@ module.exports = new function()
 
 	// Private functions.
 
-	var _onDashlinkLoad = function(callback)
+	var _onDashlink = function(callback)
 	{
-		_onDashlinkLoadCallback.push(callback);	
+		_onDashlinkCallback.push(callback);	
 	}
 
-	var _onDashlinkSave = function(callback)
+	var _dashlink = function(method, data, callback)
 	{
-		_onDashlinkSaveCallback.push(callback);	
-	}
-
-	var _dashlinkLoad = function(name, data)
-	{
-		for(var i=0; i<_onDashlinkLoadCallback.length; i++)
+		for(var i=0; i<_onDashlinkCallback.length; i++)
 		{
-			var callback = _onDashlinkLoadCallback[i];
-			callback(name, data);
-		}
-	}
-
-	var _dashlinkSave = function(name, data)
-	{
-		for(var i=0; i<_onDashlinkSaveCallback.length; i++)
-		{
-			var callback = _onDashlinkSaveCallback[i];
-			callback(name, data);
+			var eventCallback = _onDashlinkCallback[i];
+			eventCallback(method, data, callback);
 		}
 	}
 
