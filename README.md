@@ -5,8 +5,8 @@ More info will be found here [soon]: http://dashjs.com
 
 The micro-frameworks utilized for DashJS are:
 
-	[backbone.js](http://documentcloud.github.com/backbone/)
-	[underscore.js](http://documentcloud.github.com/underscore/)
-	[nowjs.js](http://nowjs.com/)
-	[icanhaz.js](http://icanhazjs.com/)
+[backbone.js](http://documentcloud.github.com/backbone/)
+[underscore.js](http://documentcloud.github.com/underscore/)
+[nowjs.js](http://nowjs.com/)
+[icanhaz.js](http://icanhazjs.com/)
 
