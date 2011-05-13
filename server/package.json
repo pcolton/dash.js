@@ -6,11 +6,12 @@
   "author"        : "Paul Colton <dashjs@colton.net>",
   "contributors"  : [],
   "dependencies"  : {
+	"backbone": ">=0.3.3",
    	"connect" : ">=1.4.0",
 	"now"     : ">=0.5.3"
   },
   "lib"           : ".",
   "main"          : "dash.js",
-  "version"       : "0.3.0"
+  "version"       : "0.3.2"
 }
 

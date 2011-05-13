@@ -1,15 +1,14 @@
-// Dash.js v0.3.1
+// Dash.js v0.3.2
 // (c) 2011 Paul Colton
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
 
-var	fs	= require("fs"),
-	connect	= require("connect"),
-	nowjs	= require("now");
-
-module.exports = new function()
+(function()
 {
-	var root = this;
+	var	fs			= require("fs"),
+		connect		= require("connect"),
+		nowjs		= require("now"),
+		backbone	= require("backbone");
 
 	var _templatesPath = "templates";
 	var _httpServer;
@@ -17,13 +16,19 @@ module.exports = new function()
 	var _templatesExtension = {};
 	var _onDashlinkCallback = [];
 
+	var root = module.exports = Dash = _subclass(backbone);
+
+	//underscore.extend(Dash, backbone);
+
 	// Version number.
-	this.version = "0.3.1";
+	Dash.version = "0.3.2";
+
+	Dash.name2 = 'colton';
 
 	// Create a reference to the connect module.
-	this.connect = connect;
+	Dash.connect = connect;
 
-	this.initialize = function(options)
+	Dash.initialize = function(options)
 	{
 		if(options && options.templatesPath)
 		{
@@ -39,9 +44,11 @@ module.exports = new function()
 
 		root.io.now._getTemplates = _getTemplates;
 		root.io.now._dashlink = _dashlink;
+
+		console.log(root.Model);
 	}
 
-	this.listen = function(port)
+	Dash.listen = function(port)
 	{
 		var _port = parseInt(port, 10);
 
@@ -52,7 +59,7 @@ module.exports = new function()
 		}
 	}
 
-	this.getServer = function()
+	Dash.getServer = function()
 	{
 		return _httpServer;
 	}
@@ -125,4 +132,27 @@ module.exports = new function()
 		  String(suffix).replace(/[$%()*+.?\[\\\]{|}]/g, "\\$&") + "$",
 		  caseInsensitive ? "i" : "");
 	}
-}
+
+		// Function to create a subclass from a base class and provide
+	// access to that base class via a __super__ property
+	function _subclass(base)
+	{
+		// Empty object for creating new class
+		var ctor = function(){};
+		
+		// Attached the base class to the new object
+		ctor.prototype = base;
+		
+		// Create the new child class
+		var child = new ctor();
+	
+		// Save the base class so we can access it from the subclass
+		child.__super__ = base;
+		
+		return child;
+	}
+
+
+})();
+
+

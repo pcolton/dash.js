@@ -8,34 +8,15 @@
 	var VERSION = '0.3.1';
 
 	var root = this;
-
-	// Function to create a subclass from a base class and provide
-	// access to that base class via a __super__ property
-	var subclass = function(base)
-	{
-		// Empty object for creating new class
-		var ctor = function(){};
-		
-		// Attached the base class to the new object
-		ctor.prototype = base;
-		
-		// Create the new child class
-		var child = new ctor();
-	
-		// Save the base class so we can access it from the subclass
-		child.__super__ = base;
-		
-		return child;
-	}
 	
 	// Init main object and inherit from Backbone
 	var Dash = root.Dash = subclass(Backbone);
 
-	// Current version of the library. Keep in sync with `package.json`.
-	Dash.VERSION = VERSION;
-
 	// Attached the subclas function to the root object for future use
 	Dash.subclass = subclass;
+
+	// Current version of the library. Keep in sync with `package.json`.
+	Dash.VERSION = VERSION;
 	
 	// Create the 'template' property to hold the ICANHAZ.JS object entry-point object.
 	if(root.ich) 
@@ -67,11 +48,8 @@
 		{
 			case "read":    
 			case "delete":  
-				var type;
-				if(model instanceof Dash.Collection) type = model.model.prototype.type;
-				else type = model.type;
-
-				
+				var type = model.type;
+				if(model.model) type = model.model.prototype.type;
 				data = type + ":" + (model.id ? model.id : '*');
 				break;
 			case "create":  
@@ -98,7 +76,7 @@
 		// Assign the nowjs object to the Dash.io property.
 		Dash.io = root.now;
 
-		if(console) console.log("Dash.js: Dash.io created.");
+		if(console) console.log("Dash.js: Dash.io system created.");
 	
 		// If templating is loaded, then load remote templates.
 		if(Dash.template && !Dash.template.loaded)
@@ -113,6 +91,8 @@
 				});
 	
 				Dash.template.loaded = true;
+
+				if(console) { console.log("Dash.js: template system created."); }
 				
 				// Fire callback that we're ready (all remote templates loaded).
 				fireReadyCallbacks();
@@ -164,24 +144,29 @@
 		}
 	}
 
-	// From backbone-localstorage.js.
-	// Generate four random hex digits.
-	function S4()
+	// Function to create a subclass from a base class and provide
+	// access to that base class via a __super__ property
+	function subclass(base)
 	{
-	   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-	};
-
-	// From backbone-localstorage.js.
-	// Generate a pseudo-GUID by concatenating random hexadecimal.
-	function guid()
-	{
-	   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-	};
+		// Empty object for creating new class
+		var ctor = function(){};
+		
+		// Attached the base class to the new object
+		ctor.prototype = base;
+		
+		// Create the new child class
+		var child = new ctor();
+	
+		// Save the base class so we can access it from the subclass
+		child.__super__ = base;
+		
+		return child;
+	}
 
 	// Dynamically load the NowjS script.
 	$.getScript("/nowjs/now.js", function() 
 	{ 	
-		if(console) { console.log("Dash.js: nowjs loaded"); }
+		if(console) { console.log("Dash.js: nowjs system created."); }
 
 		now.ready(function()
 		{
