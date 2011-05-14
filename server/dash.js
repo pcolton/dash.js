@@ -1,4 +1,4 @@
-// Dash.js v0.3.2
+// Dash.js v0.3.3
 // (c) 2011 Paul Colton
 // See LICENSE file for licensing information or 
 // visit http://dashjs.com
@@ -10,6 +10,8 @@
 		nowjs		= require("now"),
 		backbone	= require("backbone");
 
+	var sys = require('sys');
+
 	var _templatesPath = "templates";
 	var _httpServer;
 	var _templates;
@@ -18,10 +20,12 @@
 
 	var root = module.exports = Dash = _subclass(backbone);
 
+	_loadExtensions();
+
 	//underscore.extend(Dash, backbone);
 
 	// Version number.
-	Dash.version = "0.3.2";
+	Dash.version = "0.3.3";
 
 	Dash.name2 = 'colton';
 
@@ -30,9 +34,18 @@
 
 	Dash.initialize = function(options)
 	{
-		if(options && options.templatesPath)
+		console.log(sys.inspect(options));
+
+
+		if(options && options.templatesPath) _templatesPath = options.templatesPath;
+
+		if(options && options.sync)
 		{
-			_templatesPath = options.templatesPath;
+			Dash.sync(options.sync);
+		}
+		else
+		{
+			Dash.sync(Dash.memorySync);
 		}
 
 		_httpServer = connect.createServer();
@@ -44,8 +57,6 @@
 
 		root.io.now._getTemplates = _getTemplates;
 		root.io.now._dashlink = _dashlink;
-
-		console.log(root.Model);
 	}
 
 	Dash.listen = function(port)
@@ -62,6 +73,11 @@
 	Dash.getServer = function()
 	{
 		return _httpServer;
+	}
+
+	Dash.sync = function(synchronizer)
+	{
+		Dash.__super__.sync = synchronizer;
 	}
 
 	// Private functions.
@@ -118,8 +134,7 @@
 				var data = fs.readFileSync(path + '/' + filename, "utf8");
 				var templateName = filename.substring(0, filename.indexOf('.'));
 				results[templateName] = data;
-				console.log("Loaded template: '" + templateName + 
-					"' from '" + path + '/' + filename + "'");
+				//console.log("Loaded template: '" + templateName + "' from '" + path + '/' + filename + "'");
 			}
 		}
 	
@@ -133,7 +148,23 @@
 		  caseInsensitive ? "i" : "");
 	}
 
-		// Function to create a subclass from a base class and provide
+	function _loadExtensions()
+	{
+		// Adapted from connect.js: Auto-load bundled middleware with getters.
+		fs.readdirSync(__dirname + '/extensions').forEach(function(filename){
+		  if (/\.js$/.test(filename)) {
+			var name = filename.substr(0, filename.lastIndexOf('.'));
+
+			console.log('Loaded extension: ' + name);
+
+			Dash.__defineGetter__(name, function(){
+			  return require('./extensions/' + name);
+			});
+		  }
+		});
+	}
+
+	// Function to create a subclass from a base class and provide
 	// access to that base class via a __super__ property
 	function _subclass(base)
 	{
